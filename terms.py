@@ -131,7 +131,6 @@ The JSON should be structured as follows:
     
 
 
-
 def save_to_file(url: str, terms: str, summary: str) -> str:
     """Save the URL, terms, and summary to a file."""
     try:
@@ -204,3 +203,47 @@ def analyze_terms_content(content: str, url: str) -> Dict[str, Any]:
             'status': 'error',
             'message': f'Error analyzing terms: {str(e)}'
         }
+
+def inference(terms: str, system_prompt: str, discussion: str, model_type: str = 'models/gemini-1.5-flash-001') -> str:
+    """
+    Generate an answer based on terms content, system prompt, and discussion history.
+    
+    Args:
+        terms: The terms and conditions text
+        system_prompt: The system prompt to guide the model's behavior
+        discussion: The conversation history or specific question
+        model_type: The Gemini model to use
+    
+    Returns:
+        str: The model's response
+    """
+    try:
+        # Construct the complete prompt
+        complete_prompt = f"""
+{system_prompt}
+
+Terms and Conditions:
+{terms}
+
+Current Discussion:
+{discussion}
+
+Please provide your response based on the terms and conditions above.
+"""
+        
+        genai.configure(api_key="AIzaSyB-lGipmE-uSN0pr-2XZ6OP8ApI-YEPU3o")
+        
+        model_gemini = genai.GenerativeModel(model_type)
+        response = model_gemini.generate_content(
+            complete_prompt,
+            generation_config=genai.types.GenerationConfig(
+                candidate_count=1,
+                max_output_tokens=1500,
+                temperature=0.2  # Slightly higher temperature for more natural responses
+            ),
+            stream=False
+        )
+        
+        return response.text
+    except Exception as e:
+        return f"Error generating inference: {str(e)}"
